@@ -2,7 +2,7 @@ import { ApiError, body, json, route } from "@/lib/api";
 import { loadDevice } from "@/lib/access";
 import { requireUserId } from "@/lib/auth";
 import { deviceJSON } from "@/lib/core";
-import { Automation, Device, Reading } from "@/lib/models";
+import { Automation, Device, Reading, Schedule } from "@/lib/models";
 import { normalizePin } from "@/lib/pins";
 import { DatastreamUpdate } from "@/lib/schemas";
 
@@ -39,6 +39,7 @@ export const DELETE = route(async (req, ctx: Ctx) => {
   await Promise.all([
     Reading.deleteMany({ device: device._id, pin }),
     Automation.deleteMany({ device: device._id, $or: [{ pin }, { "action.pin": pin }] }),
+    Schedule.deleteMany({ device: device._id, pin }),
   ]);
   return json({ device: deviceJSON(updated!, "owner") });
 });

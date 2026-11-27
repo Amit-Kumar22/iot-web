@@ -3,7 +3,7 @@ import { loadDevice } from "@/lib/access";
 import { requireUserId } from "@/lib/auth";
 import { bus } from "@/lib/bus";
 import { deviceJSON } from "@/lib/core";
-import { Automation, Device, Notification, Reading } from "@/lib/models";
+import { Automation, Device, Notification, Reading, Schedule } from "@/lib/models";
 import { DeviceUpdate } from "@/lib/schemas";
 
 type Ctx = RouteContext<"/api/devices/[id]">;
@@ -36,6 +36,7 @@ export const DELETE = route(async (req, ctx: Ctx) => {
     Device.deleteOne({ _id: device._id }),
     Reading.deleteMany({ device: device._id }),
     Automation.deleteMany({ device: device._id }),
+    Schedule.deleteMany({ device: device._id }),
     Notification.deleteMany({ device: device._id }),
   ]);
   bus.emit("device:revoke", { deviceId: id });

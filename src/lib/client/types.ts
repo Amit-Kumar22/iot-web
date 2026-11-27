@@ -53,6 +53,25 @@ export interface Automation {
   lastTriggeredAt: string | null;
 }
 
+export interface Schedule {
+  id: string;
+  deviceId: string;
+  name: string;
+  pin: string;
+  value: PinValue;
+  /** "HH:MM", 24-hour, in `timezone` */
+  time: string;
+  /** 0 = Sunday … 6 = Saturday */
+  days: number[];
+  timezone: string;
+  enabled: boolean;
+  lastRunAt: string | null;
+  lastError: string | null;
+  nextRunAt: string | null;
+}
+
+export const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export interface AppNotification {
   id?: string;
   deviceId: string | null;

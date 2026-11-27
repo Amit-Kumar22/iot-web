@@ -9,7 +9,7 @@ export type PinEvent = {
   deviceId: string;
   pin: string;
   value: unknown;
-  source: "device" | "app" | "automation";
+  source: "device" | "app" | "automation" | "schedule";
   at: string;
 };
 export type StatusEvent = { deviceId: string; online: boolean; connected: boolean; lastSeen: string | null };

@@ -3,6 +3,7 @@
  *   - the Next.js website + REST API          (http://HOST:PORT)
  *   - WebSockets for dashboards and hardware  (ws://HOST:PORT/ws/app, /ws/device)
  *   - an MQTT broker for hardware             (mqtt://HOST:MQTT_PORT)
+ *   - the scheduler (src/lib/schedules.ts) that switches pins at set times
  *
  * They share one in-process event bus (src/lib/bus.ts), so a switch toggled
  * on the website reaches an ESP32 over MQTT instantly, and vice versa.
@@ -45,10 +46,12 @@ async function main() {
   const { startHub, resetConnectionFlags } = await import("./src/realtime/hub");
   const { attachWebSockets } = await import("./src/realtime/ws");
   const { startMqtt } = await import("./src/realtime/mqtt");
+  const { startScheduler } = await import("./src/lib/schedules");
 
   await connectDB();
   await resetConnectionFlags();
   startHub();
+  startScheduler();
 
   const app = next({ dev, hostname, port });
   const handle = app.getRequestHandler();

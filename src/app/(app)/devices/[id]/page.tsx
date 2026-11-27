@@ -13,6 +13,7 @@ import { Widget } from "@/components/device/Widget";
 import { HistoryChart } from "@/components/device/HistoryChart";
 import { DatastreamsPanel } from "@/components/device/DatastreamsPanel";
 import { AutomationsPanel } from "@/components/device/AutomationsPanel";
+import { SchedulesPanel } from "@/components/device/SchedulesPanel";
 import { SharingPanel } from "@/components/device/SharingPanel";
 import { SetupPanel } from "@/components/device/SetupPanel";
 import { ChevronLeft, Cpu } from "lucide-react";
@@ -20,6 +21,7 @@ import { ChevronLeft, Cpu } from "lucide-react";
 const TABS = [
   { id: "dashboard", label: "Dashboard" },
   { id: "datastreams", label: "Datastreams" },
+  { id: "schedules", label: "Schedules" },
   { id: "automations", label: "Automations" },
   { id: "sharing", label: "Sharing", ownerOnly: true },
   { id: "setup", label: "Setup" },
@@ -116,6 +118,7 @@ export default function DevicePage() {
           </div>
         ))}
       {tab === "datastreams" && <DatastreamsPanel device={device} onChange={setDevice} />}
+      {tab === "schedules" && <SchedulesPanel device={device} />}
       {tab === "automations" && <AutomationsPanel device={device} />}
       {tab === "sharing" && <SharingPanel device={device} onChange={setDevice} />}
       {tab === "setup" && <SetupPanel device={device} onChange={setDevice} />}

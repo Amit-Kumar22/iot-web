@@ -176,6 +176,68 @@ const AutomationSchema = new Schema<AutomationT>(
 );
 export type AutomationDoc = HydratedDocument<AutomationT>;
 
+/* ------------------------------------------------------------- Schedule */
+
+export interface ScheduleT {
+  owner: Types.ObjectId;
+  device: Types.ObjectId;
+  name: string;
+  pin: string;
+  value: PinValue;
+  /** "HH:MM", 24-hour, in `timezone`. */
+  time: string;
+  /** Weekdays it runs on: 0 = Sunday … 6 = Saturday. */
+  days: number[];
+  /** IANA zone, e.g. "Asia/Kolkata". */
+  timezone: string;
+  enabled: boolean;
+  /** "YYYY-MM-DD HH:MM" (local) of the last run, so a minute never fires twice. */
+  lastRunKey: string | null;
+  lastRunAt: Date | null;
+  lastError: string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+const ScheduleSchema = new Schema<ScheduleT>(
+  {
+    owner: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    device: { type: Schema.Types.ObjectId, ref: "Device", required: true, index: true },
+    name: { type: String, required: true, trim: true },
+    pin: { type: String, required: true },
+    value: { type: Schema.Types.Mixed, required: true },
+    time: { type: String, required: true },
+    days: { type: [Number], default: [0, 1, 2, 3, 4, 5, 6] },
+    timezone: { type: String, default: "Asia/Kolkata" },
+    enabled: { type: Boolean, default: true, index: true },
+    lastRunKey: { type: String, default: null },
+    lastRunAt: { type: Date, default: null },
+    lastError: { type: String, default: null },
+  },
+  { timestamps: true },
+);
+export type ScheduleDoc = HydratedDocument<ScheduleT>;
+
+/* ------------------------------------------------------------ PushToken */
+
+/** An Expo push token of one phone, owned by the user signed in on it. */
+export interface PushTokenT {
+  user: Types.ObjectId;
+  token: string;
+  platform: string;
+  updatedAt?: Date;
+  createdAt?: Date;
+}
+
+const PushTokenSchema = new Schema<PushTokenT>(
+  {
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    token: { type: String, required: true, unique: true },
+    platform: { type: String, default: "android" },
+  },
+  { timestamps: true },
+);
+
 /* --------------------------------------------------------- Notification */
 
 export interface NotificationT {
@@ -208,4 +270,6 @@ export const User = getModel<UserT>("User", UserSchema);
 export const Device = getModel<DeviceT>("Device", DeviceSchema);
 export const Reading = getModel<ReadingT>("Reading", ReadingSchema);
 export const Automation = getModel<AutomationT>("Automation", AutomationSchema);
+export const Schedule = getModel<ScheduleT>("Schedule", ScheduleSchema);
+export const PushToken = getModel<PushTokenT>("PushToken", PushTokenSchema);
 export const Notification = getModel<NotificationT>("Notification", NotificationSchema);

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
-import { api, clearToken, getToken } from "@/lib/client/api";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { api, clearToken, getToken, HttpError } from "@/lib/client/api";
 import { useRealtime } from "@/lib/client/realtime";
 import type { AppNotification, User } from "@/lib/client/types";
 import { Bell, BellRing, LayoutGrid, LogOut, Menu, Settings2, X } from "lucide-react";
@@ -17,18 +17,38 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const loadMe = useCallback(() => {
+    api<{ user: User; unreadNotifications: number }>("/api/auth/me")
+      .then((r) => {
+        setUser(r.user);
+        setUnread(r.unreadNotifications);
+        setServerError(null);
+      })
+      .catch((e) => {
+        // 401: api() already cleared the token and went to /login.
+        if (e instanceof HttpError && e.status === 401) return;
+        // Anything else (server down, 500…): stay here. Redirecting to /login while
+        // the token is still stored made /login bounce straight back → endless flicker.
+        setServerError((e as Error).message || "Cannot reach the server");
+      });
+  }, []);
+
   useEffect(() => {
     if (!getToken()) {
       router.replace(`/login?next=${encodeURIComponent(location.pathname)}`);
       return;
     }
-    api<{ user: User; unreadNotifications: number }>("/api/auth/me")
-      .then((r) => {
-        setUser(r.user);
-        setUnread(r.unreadNotifications);
-      })
-      .catch(() => router.replace("/login"));
-  }, [router]);
+    loadMe();
+  }, [router, loadMe]);
+
+  // While the server is unreachable, retry quietly every 5 s.
+  useEffect(() => {
+    if (!serverError) return;
+    const t = setInterval(loadMe, 5000);
+    return () => clearInterval(t);
+  }, [serverError, loadMe]);
 
   // Opening the notifications page marks them read.
   const [prevPath, setPrevPath] = useState(pathname);
@@ -178,7 +198,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">{user ? children : null}</main>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+        {serverError && (
+          <div role="alert" className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+            <span className="flex-1">{serverError}. Retrying automatically…</span>
+            <button onClick={loadMe} className="font-semibold underline cursor-pointer">
+              Retry now
+            </button>
+          </div>
+        )}
+        {user ? children : null}
+      </main>
 
       <footer className="border-t border-border bg-card">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-4 text-xs text-muted sm:flex-row sm:px-6">

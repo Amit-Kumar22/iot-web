@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { Automation, Device, Notification, Reading, type AutomationOp, type DeviceDoc } from "./models";
 import { bus, type PinEvent } from "./bus";
 import { ApiError } from "./errors";
+import { sendPush } from "./push";
 import { coerceValue, isOnline, ONLINE_WINDOW_MS } from "./pins";
 import type { Role } from "./access";
 
@@ -120,6 +121,8 @@ export async function notifyUsers(userIds: string[], deviceId: string | null, ti
   const createdAt = new Date();
   await Notification.insertMany(userIds.map((user) => ({ user, device: deviceId, title, message, createdAt })));
   bus.emit("notify", { userIds, notification: { title, message, deviceId, createdAt: createdAt.toISOString() } });
+  // Phone push is best-effort: it must never break the automation/schedule that triggered it.
+  sendPush(userIds, title, message, { deviceId }).catch((e) => console.error("[push]", e));
 }
 
 /* ---------------------------------------------------------- serialization */

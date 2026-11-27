@@ -19,7 +19,8 @@ Everything runs in **one Node process** (`server.ts`), sharing an in-process eve
 | Online status | Live for WebSocket/MQTT; HTTP devices count as online for 60 s after the last request |
 | History | Every numeric value is stored; charts for 1h / 6h / 24h / 7d / 30d (auto-deleted after `HISTORY_RETENTION_DAYS`) |
 | Automations | `If <pin> > / ≥ / < / ≤ / = / ≠ <value>` → send a notification **or** set another pin. Edge-triggered with cooldown |
-| Notifications | Stored per user, pushed live (bell + toast) |
+| Schedules | `At HH:MM on <days> → set <pin> to <value>` (e.g. light ON every day 7 PM). Runs on the server every 20 s in the creator's time zone, so phones/browsers can be closed. Owners and operators can create them; a failed run notifies everyone with access |
+| Notifications | Stored per user, pushed live (bell + toast). Also sent as **phone push** (Expo Push Service) to every phone signed in to the mobile app |
 | Sharing | Share a device by email as **viewer** (read-only) or **operator** (can control). Only the owner edits settings |
 | App config | Admins edit the mobile app's offline *Home Automation* buttons (name, icon, ON/OFF paths, order). Apps download the list on start, so no new APK is needed |
 

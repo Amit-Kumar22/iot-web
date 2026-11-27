@@ -52,3 +52,35 @@ export const AutomationCreate = z.object({
   cooldownSec: z.number().int().min(0).max(86400).default(60),
 });
 export const AutomationUpdate = AutomationCreate.partial();
+
+export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function isTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export const ScheduleCreate = z.object({
+  name: z.string().trim().min(1).max(80),
+  pin: Pin,
+  value: z.union([z.number(), z.string().max(256)]),
+  time: z.string().trim().regex(TIME_RE, "Time must be HH:MM (24-hour)"),
+  days: z
+    .array(z.number().int().min(0).max(6))
+    .min(1, "Pick at least one day")
+    .max(7)
+    .transform((d) => [...new Set(d)].sort()),
+  timezone: z.string().trim().refine(isTimeZone, "Unknown time zone").default("Asia/Kolkata"),
+  enabled: z.boolean().default(true),
+});
+export const ScheduleUpdate = ScheduleCreate.partial();
+
+/** Expo push tokens look like "ExponentPushToken[xxxx]" (or "ExpoPushToken[xxxx]"). */
+export const PushTokenBody = z.object({
+  token: z.string().trim().regex(/^Expo(nent)?PushToken\[[^\]]{1,200}\]$/, "Not an Expo push token"),
+  platform: z.enum(["android", "ios"]).default("android"),
+});
