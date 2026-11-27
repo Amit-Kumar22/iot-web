@@ -40,7 +40,7 @@ export function AutomationsPanel({ device }: { device: Device }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="text-sm text-muted">
           Rules run on the server whenever a value arrives. They fire once when the condition becomes true, then re-arm when it turns false.
         </p>

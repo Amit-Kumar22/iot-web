@@ -8,7 +8,8 @@ import { applyRealtime, formatValue } from "@/lib/client/apply-realtime";
 import { useRealtime } from "@/lib/client/realtime";
 import type { Datastream, Device } from "@/lib/client/types";
 import { useLiveOnline } from "@/lib/client/use-online";
-import { Badge, Button, Card, Empty, ErrorText, Field, Input, Modal, Select, Spinner, StatusDot } from "@/components/ui";
+import { Badge, Button, Card, Empty, ErrorText, Field, Input, Modal, PageHeader, Select, Spinner, StatusDot } from "@/components/ui";
+import { Activity, Cpu, Plus, WifiOff } from "lucide-react";
 
 type Preset = { label: string; datastreams: Partial<Datastream>[] };
 const PRESETS: Record<string, Preset> = {
@@ -50,13 +51,16 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Devices</h1>
-          <p className="text-sm text-muted">Live status and values of everything you own or that was shared with you.</p>
-        </div>
-        <Button onClick={() => setAdding(true)}>+ New device</Button>
-      </div>
+      <PageHeader
+        title="Devices"
+        subtitle="Live status and values of everything you own or that was shared with you."
+        action={
+          <Button onClick={() => setAdding(true)} className="w-full sm:w-auto">
+            <Plus className="size-4" aria-hidden /> New device
+          </Button>
+        }
+      />
+      {devices && devices.length > 0 && <Summary devices={devices} />}
 
       <ErrorText error={error} />
       {!devices && !error && (
@@ -73,7 +77,7 @@ export default function DashboardPage() {
         </Empty>
       )}
       {devices && devices.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {devices.map((d) => (
             <DeviceCard key={d.id} device={d} />
           ))}
@@ -87,15 +91,46 @@ export default function DashboardPage() {
   );
 }
 
+function Summary({ devices }: { devices: Device[] }) {
+  const online = devices.filter((d) => d.online).length;
+  const items = [
+    { label: "Total devices", value: devices.length, icon: Cpu, tone: "bg-accent-soft text-accent" },
+    { label: "Online", value: online, icon: Activity, tone: "bg-success/10 text-success" },
+    { label: "Offline", value: devices.length - online, icon: WifiOff, tone: "bg-background text-muted" },
+  ];
+  return (
+    <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      {items.map((i) => (
+        <Card key={i.label} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:p-5">
+          <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${i.tone}`}>
+            <i.icon className="size-5" aria-hidden />
+          </span>
+          <div>
+            <p className="text-2xl font-bold tabular-nums text-ink">{i.value}</p>
+            <p className="text-xs text-muted">{i.label}</p>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 function DeviceCard({ device: d }: { device: Device }) {
   const online = useLiveOnline(d);
   return (
-    <Link href={`/devices/${d.id}`} className="group">
-      <Card className="flex h-full flex-col gap-4 p-4 transition group-hover:border-accent/60">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h2 className="truncate font-semibold">{d.name}</h2>
-            <p className="text-xs text-muted">{online ? "Online" : `Last seen ${timeAgo(d.lastSeen)}`}</p>
+    <Link href={`/devices/${d.id}`} className="group rounded-2xl">
+      <Card className="flex h-full flex-col gap-4 p-5 transition group-hover:-translate-y-0.5 group-hover:border-accent/50 group-hover:shadow-lift">
+        <div className="flex items-start gap-3">
+          <span
+            className={`grid size-11 shrink-0 place-items-center rounded-xl transition ${
+              online ? "bg-accent text-white shadow-sm shadow-accent/40" : "bg-background text-muted"
+            }`}
+          >
+            <Cpu className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate font-semibold text-ink">{d.name}</h2>
+            <p className="truncate text-xs text-muted">{online ? "Online now" : `Last seen ${timeAgo(d.lastSeen)}`}</p>
           </div>
           <div className="flex items-center gap-2">
             {d.role !== "owner" && <Badge>{d.role}</Badge>}
@@ -107,9 +142,13 @@ function DeviceCard({ device: d }: { device: Device }) {
         ) : (
           <dl className="grid grid-cols-2 gap-2">
             {d.datastreams.slice(0, 4).map((ds) => (
-              <div key={ds.pin} className="rounded-lg bg-background px-3 py-2">
+              <div key={ds.pin} className="rounded-xl border border-border bg-surface px-3 py-2.5">
                 <dt className="truncate text-xs text-muted">{ds.name}</dt>
-                <dd className="font-mono text-sm font-medium tabular-nums">
+                <dd
+                  className={`font-mono text-sm font-semibold tabular-nums ${
+                    ds.kind === "switch" && ds.value === 1 ? "text-accent-text" : "text-ink"
+                  }`}
+                >
                   {ds.kind === "switch" ? (ds.value === 1 ? "ON" : ds.value === 0 ? "OFF" : "—") : formatValue(ds.value, ds.unit)}
                 </dd>
               </div>

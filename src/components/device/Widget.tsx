@@ -34,16 +34,18 @@ export function Widget({
   const chartable = ds.kind !== "switch";
 
   return (
-    <Card className={`flex flex-col gap-3 p-4 ${selected ? "ring-2 ring-accent/50" : ""}`}>
+    <Card className={`flex flex-col gap-4 p-5 transition ${selected ? "border-accent/60 ring-4 ring-accent/10" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{ds.name}</p>
-          <p className="font-mono text-xs text-muted">{ds.pin}</p>
+          <p className="truncate text-sm font-semibold text-ink">{ds.name}</p>
+          <p className="mt-0.5 inline-block rounded bg-background px-1.5 font-mono text-[11px] text-muted">{ds.pin}</p>
         </div>
         {chartable && (
           <button
             onClick={onSelect}
-            className={`rounded-md px-2 py-1 text-xs font-medium cursor-pointer ${selected ? "bg-accent/15 text-accent" : "text-muted hover:text-foreground"}`}
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+              selected ? "bg-accent-soft text-accent-text" : "text-muted hover:bg-background hover:text-foreground"
+            }`}
           >
             {selected ? "Charted" : "Chart"}
           </button>
@@ -53,7 +55,7 @@ export function Widget({
       {ds.kind === "switch" && <SwitchControl value={ds.value} disabled={!canControl} onChange={(v) => write(v)} />}
       {ds.kind === "slider" && <SliderControl ds={ds} disabled={!canControl} onCommit={write} />}
       {ds.kind === "value" && (
-        <p className="font-mono text-3xl font-semibold tabular-nums">{formatValue(ds.value, ds.unit)}</p>
+        <p className="font-mono text-4xl font-bold tracking-tight tabular-nums text-ink">{formatValue(ds.value, ds.unit)}</p>
       )}
 
       <p className="text-xs text-muted">{error ? <span className="text-danger">{error}</span> : `Updated ${timeAgo(ds.updatedAt)}`}</p>
@@ -69,11 +71,19 @@ function SwitchControl({ value, disabled, onChange }: { value: unknown; disabled
       aria-checked={on}
       disabled={disabled}
       onClick={() => onChange(on ? 0 : 1)}
-      className={`relative h-12 w-full rounded-xl border text-sm font-semibold transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
-        on ? "border-accent bg-accent text-accent-fg" : "border-border bg-background text-muted"
+      className={`relative flex h-14 w-full items-center rounded-2xl border p-1.5 text-sm font-bold transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${
+        on ? "border-accent bg-accent text-white shadow-md shadow-accent/30" : "border-border bg-background text-muted"
       }`}
     >
-      {on ? "ON" : "OFF"}
+      <span
+        className={`absolute top-1.5 grid h-[calc(100%-12px)] w-[calc(50%-6px)] place-items-center rounded-xl bg-white text-xs shadow-sm transition-all ${
+          on ? "left-[calc(50%+0px)] text-accent-text" : "left-1.5 text-muted"
+        }`}
+      >
+        {on ? "ON" : "OFF"}
+      </span>
+      <span className={`w-1/2 text-center text-xs ${on ? "" : "invisible"}`}>Turn off</span>
+      <span className={`w-1/2 text-center text-xs ${on ? "invisible" : ""}`}>Turn on</span>
     </button>
   );
 }
@@ -96,7 +106,7 @@ function SliderControl({ ds, disabled, onCommit }: { ds: Datastream; disabled: b
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="font-mono text-3xl font-semibold tabular-nums">{formatValue(local, ds.unit)}</p>
+      <p className="font-mono text-4xl font-bold tracking-tight tabular-nums text-ink">{formatValue(local, ds.unit)}</p>
       <input
         type="range"
         min={ds.min}

@@ -90,7 +90,7 @@ export default function AppConfigPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">App config · Home Automation</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">App config · Home Automation</h1>
           <p className="max-w-2xl text-sm text-muted">
             The buttons shown in the mobile app&apos;s Home Automation screen (ESP32 control box over its Wi-Fi hotspot). Changes reach every
             app without a new APK: the app downloads this list when it opens with internet and keeps it for offline use.
@@ -205,7 +205,7 @@ export default function AppConfigPage() {
             {rows.map((r, i) => (
               <div
                 key={r.key}
-                className={`flex min-h-28 flex-col justify-between rounded-xl border p-3 ${i === 0 ? "border-[#F28735] bg-[#F28735] text-white" : "border-border bg-background"}`}
+                className={`flex min-h-28 flex-col justify-between rounded-xl border p-3 ${i === 0 ? "border-accent bg-accent text-white" : "border-border bg-background"}`}
               >
                 <ApplianceIcon name={r.icon} size={24} />
                 <div>

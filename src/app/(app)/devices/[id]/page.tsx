@@ -15,6 +15,7 @@ import { DatastreamsPanel } from "@/components/device/DatastreamsPanel";
 import { AutomationsPanel } from "@/components/device/AutomationsPanel";
 import { SharingPanel } from "@/components/device/SharingPanel";
 import { SetupPanel } from "@/components/device/SetupPanel";
+import { ChevronLeft, Cpu } from "lucide-react";
 
 const TABS = [
   { id: "dashboard", label: "Dashboard" },
@@ -71,15 +72,15 @@ export default function DevicePage() {
     <div className="flex flex-col gap-6">
       <Header device={device} />
 
-      <div className="flex gap-1 overflow-x-auto border-b border-border" role="tablist">
+      <div className="-mx-4 flex gap-1 overflow-x-auto border-b border-border px-4 sm:mx-0 sm:px-0" role="tablist">
         {tabs.map((t) => (
           <button
             key={t.id}
             role="tab"
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={`-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium cursor-pointer ${
-              tab === t.id ? "border-accent text-foreground" : "border-transparent text-muted hover:text-foreground"
+            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition cursor-pointer ${
+              tab === t.id ? "border-accent text-accent-text" : "border-transparent text-muted hover:border-border hover:text-foreground"
             }`}
           >
             {t.label}
@@ -125,19 +126,30 @@ export default function DevicePage() {
 function Header({ device }: { device: Device }) {
   const online = useLiveOnline(device);
   return (
-    <div className="flex flex-col gap-1">
-      <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
-        ← Devices
+    <div className="flex flex-col gap-4">
+      <Link href="/dashboard" className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted hover:text-accent-text">
+        <ChevronLeft className="size-4" aria-hidden /> All devices
       </Link>
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">{device.name}</h1>
-        <StatusDot online={online} />
-        {device.role !== "owner" && <Badge>shared · {device.role}</Badge>}
-      </div>
-      <p className="text-sm text-muted">
+      <div className="flex items-start gap-4">
+        <span
+          className={`grid size-12 shrink-0 place-items-center rounded-2xl sm:size-14 ${
+            online ? "bg-accent text-white shadow-md shadow-accent/30" : "bg-card text-muted ring-1 ring-border"
+          }`}
+        >
+          <Cpu className="size-6" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="truncate text-2xl font-bold tracking-tight text-ink sm:text-3xl">{device.name}</h1>
+            <StatusDot online={online} />
+            {device.role !== "owner" && <Badge>shared · {device.role}</Badge>}
+          </div>
+          <p className="mt-1 text-sm text-muted">
         {device.description && <>{device.description} · </>}
         {online ? (device.connected ? "Connected live" : "Polling over HTTP") : `Last seen ${timeAgo(device.lastSeen)}`}
-      </p>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

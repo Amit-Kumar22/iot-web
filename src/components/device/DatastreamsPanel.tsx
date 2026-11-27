@@ -28,7 +28,7 @@ export function DatastreamsPanel({ device, onChange }: { device: Device; onChang
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="text-sm text-muted">
           Datastreams are the device&apos;s virtual pins (<code className="font-mono">V0</code>–<code className="font-mono">V255</code>). Each one
           gets a fixed widget on the dashboard.
@@ -40,7 +40,7 @@ export function DatastreamsPanel({ device, onChange }: { device: Device; onChang
         <Empty title="No datastreams yet">Add one for every value the device sends or receives.</Empty>
       ) : (
         <Card className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full whitespace-nowrap text-sm">
             <thead className="border-b border-border text-left text-xs text-muted">
               <tr>
                 <th className="px-4 py-2.5 font-medium">Pin</th>
