@@ -81,21 +81,57 @@ export function nextRun(time: string, days: number[], tz: string, from = new Dat
   return null;
 }
 
+/** Most recent time the schedule should have fired, at or before `now`, or null. */
+export function prevRun(time: string, days: number[], tz: string, now = new Date()): Date | null {
+  const [h, mi] = time.split(":").map(Number);
+  const today = localParts(now, tz);
+  for (let i = 0; i <= 7; i++) {
+    const date = new Date(Date.UTC(today.y, today.mo - 1, today.d - i));
+    if (!days.includes(date.getUTCDay())) continue;
+    const at = zonedToUtc(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), h, mi, tz);
+    if (at.getTime() <= now.getTime()) return at;
+  }
+  return null;
+}
+
 /* -------------------------------------------------------------- scheduler */
 
 const TICK_MS = 20_000; // < 60s, so every minute is checked at least twice
 
-/** Runs every schedule whose local time is now. Safe to run in parallel: each minute is claimed atomically. */
+/**
+ * A run missed because the server was down or restarting still happens when it comes back,
+ * if it is at most this old. 0 turns catch-up off (only the exact minute runs).
+ */
+const CATCH_UP_MS = Math.max(0, Number(process.env.SCHEDULE_CATCHUP_MINUTES ?? 30)) * 60_000;
+
+/**
+ * Runs every schedule whose time has come: the current minute, or a missed run within
+ * CATCH_UP_MS. Safe to run in parallel: each run is claimed atomically by its local key.
+ */
 export async function runDueSchedules(now = new Date()) {
   const list = await Schedule.find({ enabled: true });
+  const due: { s: (typeof list)[number]; at: Date; key: string }[] = [];
   for (const s of list) {
-    const lp = localParts(now, s.timezone);
-    if (lp.hhmm !== s.time || !s.days.includes(lp.day)) continue;
+    const at = prevRun(s.time, s.days, s.timezone, now);
+    if (!at || now.getTime() - at.getTime() > Math.max(CATCH_UP_MS, 60_000)) continue;
+    const key = localParts(at, s.timezone).key;
+    if (s.lastRunKey === key) continue;
+    // Created, edited or resumed after that time: it was not due then, so don't fire it late.
+    const changed = s.updatedAt ?? s.createdAt;
+    if (changed && changed.getTime() > at.getTime() && now.getTime() - at.getTime() >= 60_000) continue;
+    due.push({ s, at, key });
+  }
+  // Oldest first, so "7:00 ON" then "7:10 OFF" missed together leave the pin OFF.
+  due.sort((a, b) => a.at.getTime() - b.at.getTime());
+
+  for (const { s, at, key } of due) {
     const claimed = await Schedule.updateOne(
-      { _id: s._id, lastRunKey: { $ne: lp.key } },
-      { $set: { lastRunKey: lp.key, lastRunAt: now } },
+      { _id: s._id, lastRunKey: { $ne: key } },
+      { $set: { lastRunKey: key, lastRunAt: now } },
     );
     if (claimed.modifiedCount === 0) continue;
+    const late = Math.round((now.getTime() - at.getTime()) / 60_000);
+    if (late >= 1) console.log(`[scheduler] "${s.name}" ran ${late} min late (missed while the server was down)`);
 
     const device = await Device.findById(s.device);
     if (!device) {
