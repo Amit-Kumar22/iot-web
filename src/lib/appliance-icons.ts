@@ -1,0 +1,48 @@
+/**
+ * Icon names an appliance can use. This list is a contract with the mobile app:
+ * the app ships the same names (robotics-trainer/src/components/ApplianceIcon.tsx),
+ * mapped to the same Lucide icons. Only add a name here after the app has it,
+ * otherwise older apps show a fallback icon.
+ */
+export const APPLIANCE_ICON_NAMES = [
+  "bulb",
+  "lamp",
+  "lamp-desk",
+  "lamp-ceiling",
+  "fan",
+  "ac",
+  "heater",
+  "tv",
+  "monitor",
+  "speaker",
+  "plug",
+  "socket",
+  "power",
+  "fridge",
+  "washer",
+  "microwave",
+  "cooker",
+  "water",
+  "geyser",
+  "pump",
+  "door",
+  "lock",
+  "bell",
+  "alarm",
+  "camera",
+  "router",
+  "wifi",
+  "blinds",
+  "sun",
+  "moon",
+  "plant",
+  "motor",
+  "cpu",
+  "gauge",
+  "thermometer",
+  "wind",
+  "flame",
+  "zap",
+] as const;
+
+export type ApplianceIconName = (typeof APPLIANCE_ICON_NAMES)[number];
